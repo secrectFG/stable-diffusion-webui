@@ -543,8 +543,8 @@ def create_toprow(is_img2img):
             myskip = gr.Button('跳过单个任务')
             mystop = gr.Button('跳过一组任务')
 
-            refreshinjstimerbtn = gr.Button('refreshinjstimerbtn', 
-            elem_id=f'{id_part}_refreshinjstimerbtn', visible=False)
+            refreshinjstimerbtn = gr.Button('刷新信息', 
+            elem_id=f'{id_part}_refreshinjstimerbtn', visible=True)
 
             refreshImageInfoBtn = gr.Button('刷新最新结果图片')
            
