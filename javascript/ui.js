@@ -245,7 +245,7 @@ setInterval(() => {
     if (img2img_refreshinjstimerbtn!=null){
         img2img_refreshinjstimerbtn.click()
     }
-}, 10000);
+}, 60000);
 
 function copyToClipboard(){
     console.log(arguments[0])
