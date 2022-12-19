@@ -540,71 +540,77 @@ def create_toprow(is_img2img):
                     prompt_style2 = gr.Dropdown(label="Style 2", elem_id=f"{id_part}_style2_index", choices=[k for k, v in shared.prompt_styles.styles.items()], value=next(iter(shared.prompt_styles.styles.keys())))
                     prompt_style2.save_to_config = True
 
-    with gr.Row(elem_id="customtag"):
-        filetag = gr.Textbox(label="文件名写入自定义标签",elem_id='filetag_Textbox')
-        cleattagbtn = gr.Button('cleattag',elem_id='cleattagbtn')
-        cleattagbtn.click(
+    with gr.Row(elem_id=f"{id_part}customtag"):
+        with gr.Column(scale=6):
+                filetag = gr.Textbox(label="文件名写入自定义标签",elem_id=f'filetag_Textbox')
+                
+        with gr.Column(scale=1):
+                cleartagbtn = gr.Button('cleartag',elem_id='cleartagbtn')
+
+        cleartagbtn.click(
                 fn=lambda : '',
                 outputs=filetag,
             )
         myui.filetagTextbox = filetag
 
-    with gr.Row(elem_id="custom1"):
-        with gr.Row():
+    # with gr.Row(elem_id=f"{id_part}标签批处理功能"):
+    #     targetTagTextbox = gr.Textbox(label="要改变权重的词")
 
+
+    with gr.Row(elem_id=f"{id_part}custom1"):
+
+        with gr.Column(scale=1):
             myskip = gr.Button('跳过单个任务')
             mystop = gr.Button('跳过一组任务')
+        with gr.Column(scale=4):
+            with gr.Row():
+                refreshinjstimerbtn = gr.Button('刷新任务信息', 
+                elem_id=f'{id_part}_refreshinjstimerbtn', visible=True)
 
-            refreshinjstimerbtn = gr.Button('刷新任务信息', 
-            elem_id=f'{id_part}_refreshinjstimerbtn', visible=True)
+                # refreshbtn = gr.Button('刷新队列',elem_id='update_queue_label_btn',visible=False)
+                addtoqueue = gr.Button('添加到任务队列',variant='primary',visible=not is_img2img)
+                queueLabel = gr.Label(label='任务信息', 
+                value=refresh_queueText,)
 
-            
-            
-            
-            # refreshbtn = gr.Button('刷新队列',elem_id='update_queue_label_btn',visible=False)
-            addtoqueue = gr.Button('添加到任务队列',variant='primary',visible=not is_img2img)
-            queueLabel = gr.Label(label='任务信息', 
-            value=refresh_queueText,)
+                myui.queueLabel = queueLabel
 
-            myui.queueLabel = queueLabel
+                queueInfoDropdown = gr.Dropdown(label="队列信息", choices=getQueueTagInfos(),interactive=True)
+                myui.queueInfoDropdown = queueInfoDropdown
 
-            queueInfoDropdown = gr.Dropdown(label="队列信息", choices=getQueueTagInfos(),interactive=True)
-            myui.queueInfoDropdown = queueInfoDropdown
+                refreshQueueInfoBtn = gr.Button('刷新队列信息',elem_id=f'{id_part}_refreshQueueInfoBtn',)
+                
+                
+                
+                myhelpers.any.addtoqueuebtn = addtoqueue
+                myui.refreshinjstimerbtn = refreshinjstimerbtn
+                
 
-            refreshQueueInfoBtn = gr.Button('刷新队列信息',elem_id=f'{id_part}_refreshQueueInfoBtn',)
-            
-            
-            
-            myhelpers.any.addtoqueuebtn = addtoqueue
-            myui.refreshinjstimerbtn = refreshinjstimerbtn
-            
+                def refreshinjstimer():
+                    return refresh_queueText()
+                
+                refreshinjstimerbtn.click(fn=refreshinjstimer, outputs=[queueLabel])
 
-            def refreshinjstimer():
-                return refresh_queueText()
-            
-            refreshinjstimerbtn.click(fn=refreshinjstimer, outputs=[queueLabel])
-
-            def refreshQueueInfo():
-                return gr.Dropdown.update(choices=getQueueTagInfos())
+                def refreshQueueInfo():
+                    return gr.Dropdown.update(choices=getQueueTagInfos())
 
 
-            refreshQueueInfoBtn.click(
-                fn = refreshQueueInfo, 
-                outputs = [queueInfoDropdown], )
-            
-            myskip.click(
-                fn=lambda: shared.state.skip(),
-                inputs=[],
-                outputs=[],
-            )
+                refreshQueueInfoBtn.click(
+                    fn = refreshQueueInfo, 
+                    outputs = [queueInfoDropdown], )
+                
+                myskip.click(
+                    fn=lambda: shared.state.skip(),
+                    inputs=[],
+                    outputs=[],
+                )
 
-            mystop.click(
-                fn=lambda: shared.state.interrupt(),
-                inputs=[],
-                outputs=[],
-            )
+                mystop.click(
+                    fn=lambda: shared.state.interrupt(),
+                    inputs=[],
+                    outputs=[],
+                )
 
-            
+                
 
             
 
@@ -820,6 +826,8 @@ Requested path was: {f}
                         save = gr.Button('Save', elem_id=f'save_{tabname}')
 
                     buttons = parameters_copypaste.create_buttons(["img2img", "inpaint", "extras"])
+                    # copytoclipbord = gr.Button('拷贝到剪贴板')
+                    
                     button_id = "hidden_element" if shared.cmd_opts.hide_ui_dir_config else 'open_folder'
                     open_folder_button = gr.Button(folder_symbol, elem_id=button_id)
 
@@ -869,6 +877,7 @@ Requested path was: {f}
                     html_info_x = gr.HTML()
                     html_info = gr.HTML()
                 parameters_copypaste.bind_buttons(buttons, result_gallery, "txt2img" if tabname == "txt2img" else None)
+                # copytoclipbord.click(lambda:print('拷贝到剪贴板'),_js = 'copyToClipboard', inputs=generation_info)
                 return result_gallery, generation_info if tabname != "extras" else html_info_x, html_info
 
 
