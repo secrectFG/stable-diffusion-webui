@@ -277,7 +277,7 @@ def has_job():
     return shared.state.job_count > 0 or shared.state.sampling_steps > 0
 
 def get_progress_str():
-    if shared.state.job_count == 0:return ""
+    if not has_job():return ""
     jobstr = '' if shared.state.job_count==0 else f' 总体:{shared.state.job_no+1}/{shared.state.job_count}'
     return f'{shared.state.sampling_step}/{shared.state.sampling_steps}{jobstr}'
 
