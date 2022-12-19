@@ -70,7 +70,7 @@
     "Highres. fix": "高分辨率修复",
     "Firstpass width": "首次宽度",
     "Firstpass height": "首次高度",
-    "Denoising strength": "重绘幅度(Denoising)",
+    "Denoising strength": "重绘幅度",
     "Batch count": "生成批次",
     "Batch size": "每批数量",
     "CFG Scale": "提示词相关性(CFG Scale)",

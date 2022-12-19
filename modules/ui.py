@@ -96,6 +96,13 @@ taskqueque = []
 outputs_queue_lock = threading.Lock()
 outputs_taskqueque = []
 
+def getQueueTagInfos():
+    rt = []
+    with outputs_queue_lock:
+        rt = [task['tag'] for task in taskqueque]
+    
+    return rt
+
 
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
@@ -535,7 +542,12 @@ def create_toprow(is_img2img):
 
     with gr.Row(elem_id="customtag"):
         filetag = gr.Textbox(label="文件名写入自定义标签",elem_id='filetag_Textbox')
-        myhelpers.any.filetagTextbox = filetag
+        cleattagbtn = gr.Button('cleattag',elem_id='cleattagbtn')
+        cleattagbtn.click(
+                fn=lambda : '',
+                outputs=filetag,
+            )
+        myui.filetagTextbox = filetag
 
     with gr.Row(elem_id="custom1"):
         with gr.Row():
@@ -543,28 +555,42 @@ def create_toprow(is_img2img):
             myskip = gr.Button('跳过单个任务')
             mystop = gr.Button('跳过一组任务')
 
-            refreshinjstimerbtn = gr.Button('刷新信息', 
+            refreshinjstimerbtn = gr.Button('刷新任务信息', 
             elem_id=f'{id_part}_refreshinjstimerbtn', visible=True)
 
-            refreshImageInfoBtn = gr.Button('刷新最新结果图片')
-           
+            
             
             
             # refreshbtn = gr.Button('刷新队列',elem_id='update_queue_label_btn',visible=False)
             addtoqueue = gr.Button('添加到任务队列',variant='primary',visible=not is_img2img)
-            myhelpers.any.queueText = gr.Label(label='队列信息', 
+            queueLabel = gr.Label(label='任务信息', 
             value=refresh_queueText,)
+
+            myui.queueLabel = queueLabel
+
+            queueInfoDropdown = gr.Dropdown(label="队列信息", choices=getQueueTagInfos(),interactive=True)
+            myui.queueInfoDropdown = queueInfoDropdown
+
+            refreshQueueInfoBtn = gr.Button('刷新队列信息',elem_id=f'{id_part}_refreshQueueInfoBtn',)
             
-            cleattagbtn = gr.Button('cleattag',elem_id='cleattagbtn')
+            
             
             myhelpers.any.addtoqueuebtn = addtoqueue
             myui.refreshinjstimerbtn = refreshinjstimerbtn
-            myui.refreshImageInfoBtn = refreshImageInfoBtn
+            
 
             def refreshinjstimer():
                 return refresh_queueText()
             
-            refreshinjstimerbtn.click(fn=refreshinjstimer, outputs=[myhelpers.any.queueText])
+            refreshinjstimerbtn.click(fn=refreshinjstimer, outputs=[queueLabel])
+
+            def refreshQueueInfo():
+                return gr.Dropdown.update(choices=getQueueTagInfos())
+
+
+            refreshQueueInfoBtn.click(
+                fn = refreshQueueInfo, 
+                outputs = [queueInfoDropdown], )
             
             myskip.click(
                 fn=lambda: shared.state.skip(),
@@ -578,10 +604,7 @@ def create_toprow(is_img2img):
                 outputs=[],
             )
 
-            cleattagbtn.click(
-                fn=lambda : '',
-                outputs=filetag,
-            )
+            
 
             
 
@@ -608,6 +631,9 @@ def create_toprow(is_img2img):
                 histroy = gr.Dropdown(label="Histroy", choices=myhelpers.getDictKeyByReverse(dic))
                 refreshhistroyBtn = gr.Button('刷新历史记录',
                 elem_id='refreshhistroyBtn')
+
+                refreshImageInfoBtn = gr.Button('刷新最新结果图片')
+                myui.refreshImageInfoBtn = refreshImageInfoBtn
 
                 myhelpers.any.histroyDropdown = histroy
 
@@ -943,7 +969,7 @@ def create_ui(wrap_gradio_gpu_call,wrap_queued_call):
                     denoising_strength,
                     firstphase_width,
                     firstphase_height,
-                ] + custom_inputs+[myhelpers.any.filetagTextbox],
+                ] + custom_inputs+[myhelpers.txt2img.filetagTextbox],
 
                 outputs=[
                     txt2img_gallery,
@@ -1018,6 +1044,7 @@ def create_ui(wrap_gradio_gpu_call,wrap_queued_call):
                         taskid=myhelpers.any.taskid,
                         task=task,
                         info_text=info_text,
+                        tag = filetag,
                         ))
                     print(f'添加到队列 {myhelpers.any.taskid} 当前队列长度{len(taskqueque)}')
 
@@ -1048,10 +1075,10 @@ def create_ui(wrap_gradio_gpu_call,wrap_queued_call):
                     denoising_strength,
                     firstphase_width,
                     firstphase_height,
-                ] + custom_inputs+[myhelpers.any.filetagTextbox],
+                ] + custom_inputs+[myhelpers.txt2img.filetagTextbox],
 
                 outputs=[
-                    myhelpers.any.queueText,
+                    myhelpers.txt2img.queueLabel,
                     myhelpers.any.histroyDropdown,
                 ],
                 show_progress=False,
@@ -1108,7 +1135,7 @@ def create_ui(wrap_gradio_gpu_call,wrap_queued_call):
                 (hr_options, lambda d: gr.Row.update(visible="Denoising strength" in d)),
                 (firstphase_width, "First pass size-1"),
                 (firstphase_height, "First pass size-2"),
-                (myhelpers.any.filetagTextbox,'customtag'),
+                (myhelpers.txt2img.filetagTextbox,'customtag'),
                 *modules.scripts.scripts_txt2img.infotext_fields
             ]
             parameters_copypaste.add_paste_fields("txt2img", None, txt2img_paste_fields)

@@ -23,9 +23,14 @@ class MyUI:
     def __init__(self) -> None:
         self.refreshinjstimerbtn = None
         self.refreshImageInfoBtn = None
+        self.queueInfoDropdown = None
+        self.filetagTextbox = None
+        self.queueLabel = None
 
 txt2img = MyUI()
 img2img = MyUI()
+
+
 
 def getDictKeyByReverse(dic:dict):
     keys = [k for k in dic]
