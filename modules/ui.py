@@ -560,6 +560,8 @@ def create_toprow(is_img2img):
     with gr.Row(elem_id=f"{id_part}custom1"):
 
         with gr.Column(scale=1):
+            queueLabel = gr.Label(label='任务信息', 
+                value=refresh_queueText,)
             myskip = gr.Button('跳过单个任务')
             mystop = gr.Button('跳过一组任务')
         with gr.Column(scale=4):
@@ -569,8 +571,7 @@ def create_toprow(is_img2img):
 
                 # refreshbtn = gr.Button('刷新队列',elem_id='update_queue_label_btn',visible=False)
                 addtoqueue = gr.Button('添加到任务队列',variant='primary',visible=not is_img2img)
-                queueLabel = gr.Label(label='任务信息', 
-                value=refresh_queueText,)
+                
 
                 myui.queueLabel = queueLabel
 
