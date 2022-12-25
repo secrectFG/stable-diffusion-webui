@@ -89,6 +89,9 @@ refresh_symbol = '\U0001f504'  # 🔄
 save_style_symbol = '\U0001f4be'  # 💾
 apply_style_symbol = '\U0001f4cb'  # 📋
 
+myconfig = myhelpers.loadJson('myconfig.json')
+
+
 
 taskqueue_lock = threading.Lock()
 taskqueque = []
@@ -542,10 +545,23 @@ def create_toprow(is_img2img):
 
     with gr.Row(elem_id=f"{id_part}customtag"):
         with gr.Column(scale=6):
-                filetag = gr.Textbox(label="文件名写入自定义标签",elem_id=f'filetag_Textbox')
+            
+            
+            autogentagCheckbox = gr.Checkbox(label='自动根据历史记录将改变写入标签',
+            value= lambda : myconfig.get('autogentag',True))
+
+            filetag = gr.Textbox(label="文件名写入自定义标签",elem_id=f'filetag_Textbox')
+
+            def autogentagCheckboxChange(b):
+                myconfig['autogentag'] = b
+                myhelpers.saveJson(myconfig, 'myconfig.json')
+                print(f'自动生成标签:{b}')
+
+            autogentagCheckbox.change(fn = autogentagCheckboxChange,inputs=autogentagCheckbox)
+            
                 
         with gr.Column(scale=1):
-                cleartagbtn = gr.Button('cleartag',elem_id='cleartagbtn')
+            cleartagbtn = gr.Button('cleartag',elem_id='cleartagbtn')
 
         cleartagbtn.click(
                 fn=lambda : '',
@@ -944,8 +960,40 @@ def create_ui(wrap_gradio_gpu_call,wrap_queued_call):
             lastoutout = myhelpers._Any()
             lastoutout.outputs = None
 
+            myui = myhelpers.txt2img
+
+            def handleautogentag(filetag,args):
+                if myconfig.get('autogentag',True):
+                    dic = myhelpers.readJsonWithTag('txt2img_histroy.json')
+                    info_text_ = dic.get(filetag,None)
+                    if not info_text_ is None:
+                        res = parameters_copypaste.parse_generation_parameters(info_text_)
+                        if 'Prompt' in res:
+                            addlist,removelist = myhelpers.getPromptDif(args[0],res['Prompt'])
+                            if len(addlist)>0 or len(removelist)>0:
+                                addstr = str(addlist).replace('[','').replace(']','')
+                                removestr = str(removelist).replace('[','').replace(']','')
+                                filetag+=f' [Prompt add:{addstr} remove:{removestr}]'
+                        if 'Negative prompt' in res:
+                            res = parameters_copypaste.parse_generation_parameters(info_text_)
+                            addlist,removelist = myhelpers.getPromptDif(args[1],res['Negative prompt'])
+                            if len(addlist)>0 or len(removelist)>0:
+                                addstr = str(addlist).replace('[','').replace(']','')
+                                removestr = str(removelist).replace('[','').replace(']','')
+                                filetag+=f' [NegativePrompt add:{addstr} remove:{removestr}]'
+                return filetag
+
             def mywrap_to_saveinfotext(*args, **kwargs):
                 filetag = args[-1]
+                try:
+                    filetag = handleautogentag(filetag, args)
+                    args = list(args)
+                    args[-1] = filetag
+                    args = tuple(args)
+                except Exception as e:
+                    print(f'处理自动标签出错 {e}')
+                    traceback.print_exc()
+
                 info_text = processing.create_infotext2(*args,**kwargs)   
                 myhelpers.saveFileAllTextWithTag('info_text.txt', info_text)
                 if (not filetag is None) and (filetag != ''):
@@ -1038,6 +1086,16 @@ def create_ui(wrap_gradio_gpu_call,wrap_queued_call):
                 
             def mywrap(*args, **kwargs):
                 filetag = args[-1]
+                try:
+                    filetag = handleautogentag(filetag, args)
+                    args = list(args)
+                    args[-1] = filetag
+                    args = tuple(args)
+                    
+                except Exception as e:
+                    print(f'处理自动标签出错 {e}')
+                    traceback.print_exc()
+
                 info_text = processing.create_infotext2(*args, **kwargs)
                 myhelpers.saveFileAllTextWithTag('info_text.txt', info_text)
                 dic = myhelpers.readJsonWithTag('txt2img_histroy.json')
@@ -1048,6 +1106,7 @@ def create_ui(wrap_gradio_gpu_call,wrap_queued_call):
 
                 with taskqueue_lock:
                     def task():
+                        
                         return wrappedtxt2imgf(*args,**kwargs)
                     myhelpers.any.taskid+=1
                     taskqueque.append(dict(

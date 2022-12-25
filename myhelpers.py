@@ -26,12 +26,27 @@ class MyUI:
         self.queueInfoDropdown = None
         self.filetagTextbox = None
         self.queueLabel = None
+        self.last_prompt = None
+        self.last_negative_prompt = None
 
 txt2img = MyUI()
 img2img = MyUI()
 
+def getPromptDif(new:str,old:str):
+    newlist = [ s for s in new.split(',')]
+    oldlist = [ s for s in old.split(',')]
 
+    removelist = []
+    for olditem in oldlist:
+        if not olditem in newlist:
+            removelist.append(olditem)
+    addlist = []
+    for newitem in newlist:
+        if not newitem in oldlist:
+            addlist.append(newitem)
 
+    return addlist,removelist
+                
 def getDictKeyByReverse(dic:dict):
     keys = [k for k in dic]
     keys.reverse()
